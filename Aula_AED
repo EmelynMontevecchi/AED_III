@@ -1,0 +1,254 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct nodo{
+    int valor;
+    struct nodo *esq;
+    struct nodo *dir;
+} Nodo;
+
+typedef struct pilha{
+    Nodo *no;
+    struct pilha *prox;
+} Pilha;
+
+typedef struct fila{
+    Nodo *no;
+    struct fila *prox;
+} Fila;
+Fila *enfireirar(Fila *f, Nodo *n){
+    Fila *novo = (Fila*)malloc (sizeof(Fila));
+    novo -> no = n;
+    novo ->prox = NULL;
+    if(!f){
+        f = novo;
+    }else{
+        Fila *aux = f;
+        while(aux->prox)
+            aux = aux -> prox;
+        aux -> prox = novo;
+    }
+     return;
+}
+Fila *desenfileirar(Fila *f){
+    if (f){
+        Fila *aux = f;
+        f = f -> prox;
+        free(aux);
+        return f = f -> prox;
+    }else
+        return NULL;
+}
+
+void mostrarAtual(Nodo *atual){
+    if(atual == NULL)
+        printf("#\n");
+    else{
+        printf("%i\n",atual->valor);
+        if(!atual->esq)
+            printf("esq->#\n");
+        else
+            printf("esq->%i\n",atual->esq->valor);
+        if(!atual->dir)
+            printf("dir->#\n");
+        else
+            printf("dir->%i\n",atual->dir->valor);
+    }
+}
+Nodo* criarNodo(int v){
+    Nodo *p = (Nodo*)malloc(sizeof(Nodo));
+    p->valor = v;
+    p->esq = NULL;
+    p->dir = NULL;
+    return p;
+}
+void excluirNodo(Nodo *p){
+    if(p != NULL){
+        if(p->esq != NULL)
+            excluirNodo(p->esq);
+        if(p->dir != NULL)
+            excluirNodo(p->dir);
+        free(p);
+    }
+}
+Nodo* buscaProf(Nodo *p, int v){
+    if (!p){
+         return NULL;
+    }else if (p -> valor == v){
+        return p;
+    }else{
+        Nodo *aux;
+        if(aux = buscaProf(p->esq,v))
+            return aux;
+        else
+            return buscaProf (p->dir, v);
+        }
+    }
+Nodo* buscaLarg(Fila *f, int v){
+    if (!f){
+         return NULL;
+    }else if (f -> no -> valor == v){
+        Nodo *r = f ->no;
+        while(f)
+            f = desenfileirar(f);
+        return r;
+    }else{
+        if(f-> no->esq)
+            f = enfireirar(f, f-> no->esq);
+        if(f-> no->dir)
+            f = enfireirar(f, f-> no->dir);
+        f = desenfileirar(f);
+        return buscaLarg(f,v);
+    }
+}
+int main(){
+    Nodo *raiz, *atual;
+    raiz = NULL;
+    Pilha *pil = NULL;
+    atual = NULL;
+    int v, op;
+    op = 1;
+    while(op!=0){
+        system("cls");
+        printf("Opcoes:\n");
+        printf("1 - mostrar nodo atual\n");
+        printf("2 - criar novo nodo\n");
+        printf("3 - navegar\n");
+        printf("4 - excluir nodo\n");
+        printf("0 - sair\n");
+        printf("op: ");
+        scanf("%i",&op);
+
+        switch(op){
+        case 1:
+            mostrarAtual(atual);
+            break;
+        case 2:
+            printf("Informe o valor (int): ");
+            scanf("%i",&v);
+            Nodo *p = criarNodo(v);
+            if(raiz == NULL){
+                raiz = p;
+                atual = p;
+            }else{
+                printf("informe:\n");
+                printf("   1 - esquerda\n");
+                printf("   2 - direita\n");
+                printf("op: ");
+                scanf("%i",&op);
+                if(op==1 && atual->esq == NULL)
+                    atual->esq = p;
+                else if(op==2 && atual->dir == NULL)
+                    atual->dir = p;
+                else{
+                    free(p);
+                    op=1;
+                    printf("operacao invalida\n");
+                }
+            }
+            break;
+        case 3:
+            printf("informe:\n");
+            printf("   1 - esquerda\n");
+            printf("   2 - direita\n");
+            printf("   3 - raiz\n");
+            printf("   4 - subir nivel\n");
+            printf("op: ");
+            scanf("%i",&op);
+            if(atual == NULL)
+                printf("operacao invalida\n");
+            else if(op == 1 && atual->esq != NULL){
+                Pilha *aux  = (Pilha*)malloc(sizeof(Pilha));
+                aux->no = atual;
+                aux->prox = pil;
+                pil = aux;
+                atual = atual->esq;
+            }else if(op == 2 && atual->dir != NULL){
+                Pilha *aux  = (Pilha*)malloc(sizeof(Pilha));
+                aux->no = atual;
+                aux->prox = pil;
+                pil = aux;
+                atual = atual->dir;
+            }else if(op == 3){
+                atual = raiz;
+                while(pil){
+                    Pilha *aux = pil;
+                    pil = pil->prox;
+                    free(aux);
+                }
+            }else if(op == 4){
+                if(pil){
+                    atual = pil->no;
+                    Pilha *aux = pil;
+                    pil = pil->prox;
+                    free(aux);
+                }else{
+                   printf("operacao invalida\n");
+                }
+            }else{
+                op=1;
+                printf("operacao invalida\n");
+            }
+            break;
+        case 4:
+            if(!atual)
+                printf("operacao invalida\n");
+            else{
+                printf("informe:\n");
+                printf("   1 - esquerda\n");
+                printf("   2 - direita\n");
+                if(atual == raiz)
+                    printf("   3 - raiz\n");
+                printf("op: ");
+                scanf("%i",&op);
+
+                if(op==1){
+                    excluirNodo(atual->esq);
+                    atual->esq = NULL;
+                }
+                if(op==2){
+                    excluirNodo(atual->dir);
+                    atual->dir = NULL;
+                }
+                if(atual == raiz && op == 3){
+                    excluirNodo(atual);
+                    atual = NULL;
+                    raiz = NULL;
+                }
+            }
+            op=1;
+            break;
+        case 5:
+            printf("informe:\n");
+            printf("   1 - profundidade\n");
+            printf("   2 - largura\n");
+            printf("op: ");
+            scanf("%i", &op);
+            printf("valor: ");
+            scanf("%i", &v);
+            if (op==1){
+                Nodo *resp = buscaProf(raiz, v);
+                if (resp){
+                        printf("valor %i [%x] \n", resp -> valor, resp);
+                }
+                else
+                    printf("valor nao encontrado \n");
+                }else if(op == 2){
+                    Fila *f = NULL;
+                    f = enfireirar(f, raiz);
+                    Nodo *r = buscaLarg(f,v);
+                    printf("busca em largura /n");
+                }else{
+                    printf("opcao invalida \n");
+                }
+
+            op=1;
+            break;
+        case 0:
+            printf("saindo...\n");
+            break;
+        }
+        system("pause");
+    }
+    return 0;
+    }
