@@ -1,0 +1,172 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct nodo{
+    int valor;
+    struct nodo *esq;
+    struct nodo *dir;
+} Nodo;
+
+typedef struct pilha{
+    Nodo *no;
+    struct pilha *prox;
+} Pilha;
+
+void mostrarAtual(Nodo *atual){
+    if(atual == NULL)
+        printf("#\n");
+    else{
+        printf("%i\n",atual->valor);
+        if(!atual->esq)
+            printf("esq->#\n");
+        else
+            printf("esq->%i\n",atual->esq->valor);
+        if(!atual->dir)
+            printf("dir->#\n");
+        else
+            printf("dir->%i\n",atual->dir->valor);
+    }
+}
+
+Nodo* criarNodo(int v){
+    Nodo *p = (Nodo*)malloc(sizeof(Nodo));
+    p->valor = v;
+    p->esq = NULL;
+    p->dir = NULL;
+    return p;
+}
+
+void excluirNodo(Nodo *p){
+    if(p != NULL){
+        if(p->esq != NULL)
+            excluirNodo(p->esq);
+        if(p->dir != NULL)
+            excluirNodo(p->dir);
+        free(p);
+    }
+}
+
+int main(){
+    Nodo *raiz, *atual;
+    raiz = NULL;
+    Pilha *pil = NULL;
+    atual = NULL;
+    int v, op;
+    op = 1;
+    while(op!=0){
+        system("cls");
+        printf("Opcoes:\n");
+        printf("1 - mostrar nodo atual\n");
+        printf("2 - criar novo nodo\n");
+        printf("3 - navegar\n");
+        printf("4 - excluir nodo\n");
+        printf("0 - sair\n");
+        printf("op: ");
+        scanf("%i",&op);
+
+        switch(op){
+        case 1:
+            mostrarAtual(atual);
+            break;
+        case 2:
+            printf("Informe o valor (int): ");
+            scanf("%i",&v);
+            Nodo *p = criarNodo(v);
+            if(raiz == NULL){
+                raiz = p;
+                atual = p;
+            }else{
+                printf("informe:\n");
+                printf("   1 - esquerda\n");
+                printf("   2 - direita\n");
+                printf("op: ");
+                scanf("%i",&op);
+                if(op==1 && atual->esq == NULL)
+                    atual->esq = p;
+                else if(op==2 && atual->dir == NULL)
+                    atual->dir = p;
+                else{
+                    free(p);
+                    op=1;
+                    printf("operacao invalida\n");
+                }
+            }
+            break;
+        case 3:
+            printf("informe:\n");
+            printf("   1 - esquerda\n");
+            printf("   2 - direita\n");
+            printf("   3 - raiz\n");
+            printf("   4 - subir nivel\n");
+            printf("op: ");
+            scanf("%i",&op);
+            if(atual == NULL)
+                printf("operacao invalida\n");
+            else if(op == 1 && atual->esq != NULL){
+                Pilha *aux  = (Pilha*)malloc(sizeof(Pilha));
+                aux->no = atual;
+                aux->prox = pil;
+                pil = aux;
+                atual = atual->esq;
+            }else if(op == 2 && atual->dir != NULL){
+                Pilha *aux  = (Pilha*)malloc(sizeof(Pilha));
+                aux->no = atual;
+                aux->prox = pil;
+                pil = aux;
+                atual = atual->dir;
+            }else if(op == 3){
+                atual = raiz;
+                while(pil){
+                    Pilha *aux = pil;
+                    pil = pil->prox;
+                    free(aux);
+                }
+            }else if(op == 4){
+                if(pil){
+                    atual = pil->no;
+                    Pilha *aux = pil;
+                    pil = pil->prox;
+                    free(aux);
+                }else{
+                   printf("operacao invalida\n");
+                }
+            }else{
+                op=1;
+                printf("operacao invalida\n");
+            }
+            break;
+        case 4:
+            if(!atual)
+                printf("operacao invalida\n");
+            else{
+                printf("informe:\n");
+                printf("   1 - esquerda\n");
+                printf("   2 - direita\n");
+                if(atual == raiz)
+                    printf("   3 - raiz\n");
+                printf("op: ");
+                scanf("%i",&op);
+
+                if(op==1){
+                    excluirNodo(atual->esq);
+                    atual->esq = NULL;
+                }
+                if(op==2){
+                    excluirNodo(atual->dir);
+                    atual->dir = NULL;
+                }
+                if(atual == raiz && op == 3){
+                    excluirNodo(atual);
+                    atual = NULL;
+                    raiz = NULL;
+                }
+            }
+            break;
+        case 0:
+            printf("saindo...\n");
+            break;
+        }
+        system("pause");
+    }
+    return 0;
+}
