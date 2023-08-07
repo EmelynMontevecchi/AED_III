@@ -3,26 +3,15 @@
 
 typedef struct nodo {
     int valor;
-    struct nodo* esq;
-    struct nodo* dir;
-    struct nodo* pai;
+    struct nodo *esq;
+    struct nodo *dir;
+    struct nodo *pai;
     int h;
 } Nodo;
 
-Nodo* criarNodo(int v);
-Nodo* buscar(Nodo* raiz, int v);
-void mostrarArvore(Nodo* p, int nivel);
-Nodo* inserirNodo(Nodo* raiz, int v);
-Nodo* excluir(Nodo* raiz, int v);
-int fb(Nodo* p);
-Nodo* rotEsq(Nodo* raiz);
-Nodo* rotDir(Nodo* raiz);
-Nodo* rotEsqDir(Nodo* raiz);
-Nodo* rotDirEsq(Nodo* raiz);
-Nodo* balancear(Nodo* raiz);
-
+// Função para criar um novo nodo com o valor v
 Nodo* criarNodo(int v) {
-    Nodo* p = (Nodo*)malloc(sizeof(Nodo));
+    Nodo *p = (Nodo*)malloc(sizeof(Nodo));
     p->valor = v;
     p->esq = NULL;
     p->dir = NULL;
@@ -31,74 +20,91 @@ Nodo* criarNodo(int v) {
     return p;
 }
 
-int fb(Nodo* p) {
+// Função de balanceamento: retorna o fator de balanceamento de um nó
+int fb(Nodo *p) {
+    int temp = 0;
+    if (!p){
+        return 0;
+    }
+    if (p) {
+        if (!p->esq && p->dir) {
+            p->h = p->dir->h + 1;
+            return (temp - p->dir->h);
+        } else if (p->esq && !p->dir) {
+            p->h = p->esq->h + 1;
+            return p->esq->h;
+        } else if (!p->esq && !p->dir) {
+            p->h = 1;
+            return temp;
+        } else if (p->esq->h >= p->dir->h) {
+            p->h = p->esq->h + 1;
+            return p->esq->h - p->dir->h;
+        } else {
+            p->h = p->dir->h + 1;
+            return p->esq->h - p->dir->h;
+        }
+    }
+}
 
-    if (!p->esq && !p->dir) {
-      p->h = 1;
-    } else if (!p->esq) {
-      p->h = p->dir->h+1;
-    } else if (!p->dir) {
-      p->h = p->esq->h+1;
+// Rotação à direita de um nó
+Nodo* rotDir(Nodo *raiz) {
+    Nodo *p, *tempo;
+    p = raiz->esq;
+    tempo = p->dir;
+    p->dir = raiz;
+    raiz->esq = tempo;
+    int f = fb(p->dir);
+    f = fb(p);
+    return p;
+}
+
+// Rotação à esquerda de um nó
+Nodo* rotEsq(Nodo *raiz) {
+    Nodo *p, *tempo;
+    p = raiz->dir;
+    tempo = p->esq;
+    p->esq = raiz;
+    raiz->dir = tempo;
+    int f = fb(p->esq);
+    f = fb(p);
+    return p;
+}
+
+// Rotação à esquerda seguida de rotação à direita
+Nodo* rotEsqDir(Nodo *raiz) {
+    raiz->esq = rotEsq(raiz->esq);
+    return rotDir(raiz);
+}
+
+// Rotação à direita seguida de rotação à esquerda
+Nodo* rotDirEsq(Nodo *raiz) {
+    raiz->dir = rotDir(raiz->dir);
+    return rotEsq(raiz);
+}
+
+// Função de balanceamento que mantem a árvore AVL
+Nodo* balancear(Nodo *raiz) {
+    int fator_balanceamento;
+    if (raiz) {
+        fator_balanceamento = fb(raiz);
+        if (fator_balanceamento > 1 && fb(raiz->esq) < 0) {
+            raiz = rotEsqDir(raiz);
+        } else if (fator_balanceamento > 1) {
+            raiz = rotDir(raiz);
+        } else if (fator_balanceamento < -1 && fb(raiz->dir) > 0) {
+            raiz = rotDirEsq(raiz);
+        } else if (fator_balanceamento < -1) {
+            raiz = rotEsq(raiz);
+        }
+        fator_balanceamento = fb(raiz);
+        return raiz;
     } else {
-      if (p->esq->h > p->dir->h) {
-        p->h = p->esq->h + 1;
-      } else
-        p->h = p->dir->h+1;
+        return NULL;
     }
-    int alturaEsq = p->esq ? p->esq->h : 0;
-    int alturaDir = p->dir ? p->dir->h : 0;
-    return alturaEsq - alturaDir;
 }
 
-Nodo* rotEsq(Nodo* raiz);{
-Nodo *q, *temp;
-q = p->esq;
-temp = q->dir;
-q->dir = p;
-p->esq = temp;
-p = q;
-}
-
-Nodo* rotDir(Nodo* raiz){
-Nodo *q, *temp;
-q = p->dir;
-temp = q->esq;
-q->esq = p;
-p->dir = temp;
-p = q;
-}
-
-Nodo* rotEsqDir(Nodo* raiz){
-rot_esq(p->esq);
-rot_dir(p);
-}
-
-Nodo* rotDirEsq(Nodo* raiz){
-rot_dir(p->dir);
-rot_esq(p);
-}
-
-Nodo* balancear(Nodo* raiz) {
-    int balance = fb(raiz);
-
-    if (balance >= 2) {
-        // Desbalanceamento à esquerda
-        if (fb(raiz->esq) >= 0)
-            return rotDir(raiz); // Rotação simples à direita (RR)
-        else
-            return rotEsqDir(raiz); // Rotação dupla à esquerda-direita (LR)
-    } else if (balance <= -2) {
-        // Desbalanceamento à direita
-        if (fb(raiz->dir) <= 0)
-            return rotEsq(raiz); // Rotação simples à esquerda (LL)
-        else
-            return rotDirEsq(raiz); // Rotação dupla à direita-esquerda (RL)
-    }
-  fb(raiz);
-    return raiz;
-}
-
-void mostraArvore(Nodo* p, int nivel) {
+// Função recursiva que mostra a árvore de forma indentada
+void mostraArvore(Nodo *p, int nivel) {
     int i;
     if (p) {
         mostraArvore(p->dir, nivel + 1);
@@ -110,7 +116,8 @@ void mostraArvore(Nodo* p, int nivel) {
     }
 }
 
-Nodo* inserirNodo(Nodo* raiz, int v) {
+// Inseri um novo nodo na árvore
+Nodo* inserirNodo(Nodo *raiz, int v) {
     if (!raiz) {
         raiz = criarNodo(v);
     } else {
@@ -126,55 +133,64 @@ Nodo* inserirNodo(Nodo* raiz, int v) {
     return raiz;
 }
 
-Nodo* buscar(Nodo* raiz, int v) {
+// Busca um valor na árvore
+Nodo* buscar(Nodo *raiz, int v) {
     if (raiz) {
         if (v == raiz->valor) {
             return raiz;
         } else if (v < raiz->valor) {
             return buscar(raiz->esq, v);
-        } else
+        } else {
             return buscar(raiz->dir, v);
-    } else
-        return NULL;
-}
-
-Nodo* buscarMenor(Nodo* raiz) {
-    Nodo* atual = raiz;
-    while (atual->esq)
-        atual = atual->esq;
-    return atual;
-}
-/*
-SE FOR VAZIO NAO BALANCEAR 
-*/
-
-Nodo* excluirNodo(Nodo* p, int v) {
-    if (p == NULL)
-        return p;
-
-    if (v < p->valor)
-        p->esq = excluirNodo(p->esq, v);
-    else if (v > p->valor)
-        p->dir = excluirNodo(p->dir, v);
-    else {
-        if (p->esq == NULL) {
-            Nodo* temp = p->dir;
-            free(p);
-            return temp;
-        } else if (p->dir == NULL) {
-            Nodo* temp = p->esq;
-            free(p);
-            return temp;
         }
-
-        Nodo* temp = encontrarMaximo(p->esq);
-        p->valor = temp->valor;
-        p->esq = excluirNodo(p->esq, temp->valor);
+    } else {
+        return NULL;
     }
-    return p;
 }
+
+// Função que auxilia encontrar o maior valor da subárvore esquerda
+Nodo* maiorValorDaSubArvoreEsquerda(Nodo *n) {
+    while (n && n->dir != NULL)
+        n = n->dir;
+    return n;
+}
+
+// Função que exclui um nodo da árvore
+Nodo* excluirNodo(Nodo *raiz, int v) {
+    if (raiz == NULL)
+        return raiz;
+    if (v < raiz->valor)
+        raiz->esq = excluirNodo(raiz->esq, v);
+    else if (v > raiz->valor)
+        raiz->dir = excluirNodo(raiz->dir, v);
+    else {
+        if (raiz->esq == NULL) {
+            Nodo *aux = raiz->dir;
+            free(raiz);
+            return aux;
+        } else if (raiz->dir == NULL) {
+            Nodo *aux = raiz->esq;
+            free(raiz);
+            return aux;
+        }
+        Nodo *aux = maiorValorDaSubArvoreEsquerda(raiz->esq);
+        raiz->valor = aux->valor;
+        raiz->esq = excluirNodo(raiz->esq, aux->valor);
+    }
+
+    raiz = balancear(raiz);
+    return raiz;
+}
+
+// Função que exclui algum valor da árvore
+Nodo* excluir(Nodo *raiz, int v) {
+    raiz = excluirNodo(raiz, v);
+    return raiz;
+}
+
+// A função principal
 int main() {
-    Nodo* raiz = NULL;
+    Nodo *raiz = NULL, *aux = NULL;
     int op, v;
 
     do {
@@ -196,12 +212,12 @@ int main() {
         case 2:
             printf("Informe o valor (int): ");
             scanf("%d", &v);
-            //raiz = excluir(raiz, v);
+            raiz = excluir(raiz, v);
             break;
         case 3:
             printf("Informe o valor (int): ");
             scanf("%d", &v);
-            if (buscar(raiz, v))
+            if (aux = buscar(raiz, v))
                 printf("valor encontrado\n");
             else
                 printf("valor nao pertence a arvore\n");
